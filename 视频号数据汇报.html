@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>视频号数据汇报</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#E62918',
+              blue: '#3b82f6',
+              orange: '#f97316',
+              teal: '#0d9488',
+              dark: '#0f1115'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(15, 23, 42, 0.05)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+      background: #f8fafc;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(230, 41, 24, 0.04), transparent 24%),
+        radial-gradient(circle at 88% 78%, rgba(59, 130, 246, 0.04), transparent 24%);
+      color: #0f172a;
+    }
+
+    .slide-wrapper {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      padding: 2vh 3vw;
+    }
+
+    .ppt-card {
+      width: 100%;
+      max-width: 1360px;
+      max-height: 94vh;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid rgba(226, 232, 240, 0.84);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
+
+    .section-accent-title {
+      position: relative;
+      padding-left: 20px;
+      font-weight: 900;
+      color: #1e293b;
+    }
+
+    .section-accent-title::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 32px;
+      border-radius: 4px;
+    }
+
+    .title-red::before {
+      background: #E62918;
+    }
+
+    .title-blue::before {
+      background: #3b82f6;
+    }
+
+    .title-orange::before {
+      background: #f97316;
+    }
+
+    .title-teal::before {
+      background: #0d9488;
+    }
+
+    .premium-content-block {
+      border-left: 3px solid rgba(0, 0, 0, 0.06);
+      padding-left: 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .premium-content-block:hover {
+      background: rgba(15, 23, 42, 0.015);
+      border-left-color: currentColor;
+    }
+
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      right: -24px;
+      top: -24px;
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      opacity: 0.08;
+    }
+
+    .metric-red::after {
+      background: #E62918;
+    }
+
+    .metric-blue::after {
+      background: #3b82f6;
+    }
+
+    .metric-orange::after {
+      background: #f97316;
+    }
+
+    .metric-teal::after {
+      background: #0d9488;
+    }
+
+    .trend-bar {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e2e8f0;
+    }
+
+    .trend-bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .data-table th {
+      background: #f8fafc;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .insight-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 250, 252, 0.92));
+    }
+
+    .timeline-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+
+    @media (max-width: 900px) {
+      html {
+        scroll-snap-type: none;
+      }
+
+      .ppt-card {
+        max-height: none;
+        aspect-ratio: auto;
+      }
+    }
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <section class="slide-wrapper">
+    <div class="ppt-card p-12 flex flex-col justify-center items-center text-center">
+      <div class="space-y-8 max-w-4xl">
+        <div class="flex justify-center">
+          <span class="px-5 py-2 bg-brand-red text-white text-xs font-black tracking-[0.28em] rounded-sm">VIDEO ACCOUNT
+            REPORT</span>
+        </div>
+
+        <div class="space-y-4">
+          <h1 class="text-7xl font-black text-slate-900 leading-tight tracking-tighter">
+            视频号<span class="text-brand-red">数据汇报</span><br>
+            阶段复盘与增长建议
+          </h1>
+          <p class="text-3xl font-bold text-slate-500 italic">“核心数据回看 · 内容效果拆解 · 下一阶段动作建议”</p>
+        </div>
+
+        <div class="pt-16 border-t border-slate-100 w-full grid grid-cols-3 gap-10 text-left">
+          <div>
+            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">汇报周期</label>
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-8 bg-brand-red rounded-full"></div>
+              <span class="text-2xl font-black text-slate-800">2026.04 月度复盘</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">数据范围</label>
+            <span class="text-2xl font-bold text-slate-600">账号整体表现 + 内容结构</span>
+          </div>
+          <div>
+            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">汇报重点</label>
+            <span class="text-2xl font-bold text-slate-600">增长、转化、选题、节奏</span>
+          </div>
+        </div>
+      </div>
+      <div class="absolute bottom-12 right-12 opacity-10 text-[120px] font-black text-slate-900">01</div>
+    </div>
+  </section>
+
+  <section class="slide-wrapper">
+    <div class="ppt-card flex flex-col">
+      <header class="h-24 border-b border-slate-100 px-12 flex items-center justify-between">
+        <h2 class="section-accent-title title-red text-3xl font-black tracking-tight">01 核心数据总览</h2>
+        <span class="text-xs font-bold px-3 py-1 bg-brand-red text-white rounded uppercase tracking-widest">Page 02 /
+          05</span>
+      </header>
+
+      <main class="flex-1 p-12 flex flex-col gap-8">
+        <div class="grid grid-cols-4 gap-6">
+          <div class="metric-card metric-red rounded-3xl border border-red-100 bg-red-50/70 p-7 shadow-soft">
+            <span class="text-sm font-black uppercase tracking-widest text-brand-red">总播放量</span>
+            <div class="mt-4 text-5xl font-black tracking-tight text-slate-900">182.6W</div>
+            <p class="mt-3 text-sm font-bold text-slate-600">环比上月 +28.4%，内容分发效率持续改善。</p>
+          </div>
+          <div class="metric-card metric-blue rounded-3xl border border-blue-100 bg-blue-50/70 p-7 shadow-soft">
+            <span class="text-sm font-black uppercase tracking-widest text-brand-blue">新增粉丝</span>
+            <div class="mt-4 text-5xl font-black tracking-tight text-slate-900">8,460</div>
+            <p class="mt-3 text-sm font-bold text-slate-600">爆款内容带动关注转化，涨粉结构更健康。</p>
+          </div>
+          <div class="metric-card metric-orange rounded-3xl border border-orange-100 bg-orange-50/70 p-7 shadow-soft">
+            <span class="text-sm font-black uppercase tracking-widest text-brand-orange">互动总量</span>
+            <div class="mt-4 text-5xl font-black tracking-tight text-slate-900">5.8W</div>
+            <p class="mt-3 text-sm font-bold text-slate-600">评论与转发提升明显，内容讨论度正在上升。</p>
+          </div>
+          <div class="metric-card metric-teal rounded-3xl border border-teal-100 bg-teal-50/70 p-7 shadow-soft">
+            <span class="text-sm font-black uppercase tracking-widest text-brand-teal">私域线索</span>
+            <div class="mt-4 text-5xl font-black tracking-tight text-slate-900">1,126</div>
+            <p class="mt-3 text-sm font-bold text-slate-600">有效咨询留资环比 +16.2%，转化链路开始成型。</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-[1.05fr_0.95fr] gap-8 flex-1">
+          <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
+            <h3 class="section-accent-title title-blue text-2xl mb-8">关键趋势判断</h3>
+            <div class="space-y-7">
+              <div class="premium-content-block text-brand-red">
+                <h4 class="text-xl font-black text-slate-900 mb-2">播放增长主要来自“强观点 + 强封面”内容</h4>
+                <p class="text-sm font-bold text-slate-600 leading-7">高播放视频普遍具备更明确的标题承诺，且封面人物与结果型文案组合更稳定。</p>
+              </div>
+              <div class="premium-content-block text-brand-blue">
+                <h4 class="text-xl font-black text-slate-900 mb-2">粉丝增长高度集中于头部内容，需要降低单点依赖</h4>
+                <p class="text-sm font-bold text-slate-600 leading-7">当前涨粉效率较好，但头部 20% 视频贡献了大部分新增粉丝，说明内容方法论尚未完全稳定复制。</p>
+              </div>
+              <div class="premium-content-block text-brand-teal">
+                <h4 class="text-xl font-black text-slate-900 mb-2">转化链路开始跑通，但后端承接仍有优化空间</h4>
+                <p class="text-sm font-bold text-slate-600 leading-7">咨询意向在增长，但视频内钩子、评论区引导、私信承接三段式动作还不够统一。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-8 shadow-soft">
+            <h3 class="section-accent-title title-orange text-2xl mb-8">核心指标完成率</h3>
+            <div class="space-y-6">
+              <div>
+                <div class="flex justify-between items-center mb-2 text-sm font-black text-slate-700">
+                  <span>播放目标达成</span>
+                  <span>91%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-red" style="width:91%"></span></div>
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-2 text-sm font-black text-slate-700">
+                  <span>涨粉目标达成</span>
+                  <span>106%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-blue" style="width:100%"></span></div>
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-2 text-sm font-black text-slate-700">
+                  <span>互动目标达成</span>
+                  <span>98%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-orange" style="width:98%"></span></div>
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-2 text-sm font-black text-slate-700">
+                  <span>线索目标达成</span>
+                  <span>87%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-teal" style="width:87%"></span></div>
+              </div>
+            </div>
+
+            <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+              <label class="block text-sm font-black uppercase tracking-widest text-slate-400 mb-3">阶段结论</label>
+              <p class="text-lg font-black text-slate-900 leading-8">整体账号已进入“内容有增长、转化可验证、结构待放大”的阶段，下一步应从单条爆发转为稳定复制。</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="slide-wrapper">
+    <div class="ppt-card flex flex-col">
+      <header class="h-24 border-b border-slate-100 px-12 flex items-center justify-between">
+        <h2 class="section-accent-title title-blue text-3xl font-black tracking-tight">02 内容结构与爆款拆解</h2>
+        <span class="text-xs font-bold px-3 py-1 bg-brand-blue text-white rounded uppercase tracking-widest">Page 03 /
+          05</span>
+      </header>
+
+      <main class="flex-1 p-12 grid grid-cols-[1.15fr_0.85fr] gap-8">
+        <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
+          <h3 class="text-2xl font-black text-slate-900 mb-6">TOP 内容表现表</h3>
+          <div class="overflow-hidden rounded-2xl border border-slate-200">
+            <table class="data-table w-full bg-white">
+              <thead>
+                <tr>
+                  <th>视频主题</th>
+                  <th>播放量</th>
+                  <th>完播率</th>
+                  <th>互动率</th>
+                  <th>转化动作</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm font-bold text-slate-600">
+                <tr>
+                  <td class="text-slate-900">为什么你的短视频做了 3 个月还没结果</td>
+                  <td>38.4W</td>
+                  <td>41.8%</td>
+                  <td>7.2%</td>
+                  <td>评论区咨询明显提升</td>
+                </tr>
+                <tr>
+                  <td class="text-slate-900">老板做视频号最常踩的 5 个坑</td>
+                  <td>31.6W</td>
+                  <td>39.5%</td>
+                  <td>6.8%</td>
+                  <td>私信关键词触发高</td>
+                </tr>
+                <tr>
+                  <td class="text-slate-900">一条视频带来 100+ 咨询，核心不是投流</td>
+                  <td>27.2W</td>
+                  <td>44.1%</td>
+                  <td>8.1%</td>
+                  <td>留资转化最强</td>
+                </tr>
+                <tr>
+                  <td class="text-slate-900">品牌做视频号，到底要不要真人出镜</td>
+                  <td>22.8W</td>
+                  <td>36.9%</td>
+                  <td>5.6%</td>
+                  <td>收藏转发更突出</td>
+                </tr>
+                <tr>
+                  <td class="text-slate-900">一个账号从 0 到 1 的内容 SOP</td>
+                  <td>18.9W</td>
+                  <td>34.7%</td>
+                  <td>5.1%</td>
+                  <td>加微咨询稳定</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-3 gap-5 mt-6">
+            <div class="insight-card rounded-2xl border border-red-100 p-5">
+              <label class="block text-xs font-black uppercase tracking-widest text-brand-red mb-2">爆点 01</label>
+              <p class="text-sm font-bold text-slate-700 leading-7">“结果型承诺”标题显著提升点击，尤其适合方法论和踩坑类选题。</p>
+            </div>
+            <div class="insight-card rounded-2xl border border-blue-100 p-5">
+              <label class="block text-xs font-black uppercase tracking-widest text-brand-blue mb-2">爆点 02</label>
+              <p class="text-sm font-bold text-slate-700 leading-7">真人出镜 + 强观点开头更利于停留，首 3 秒决定整体播放上限。</p>
+            </div>
+            <div class="insight-card rounded-2xl border border-orange-100 p-5">
+              <label class="block text-xs font-black uppercase tracking-widest text-brand-orange mb-2">爆点 03</label>
+              <p class="text-sm font-bold text-slate-700 leading-7">评论区追问越多，私信承接越顺，说明内容问题感与转化强相关。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-8 shadow-soft">
+            <h3 class="section-accent-title title-teal text-2xl mb-7">内容结构占比</h3>
+            <div class="space-y-5">
+              <div>
+                <div class="flex justify-between mb-2 text-sm font-black text-slate-700">
+                  <span>踩坑拆解类</span>
+                  <span>34%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-red" style="width:34%"></span></div>
+              </div>
+              <div>
+                <div class="flex justify-between mb-2 text-sm font-black text-slate-700">
+                  <span>方法论干货类</span>
+                  <span>27%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-blue" style="width:27%"></span></div>
+              </div>
+              <div>
+                <div class="flex justify-between mb-2 text-sm font-black text-slate-700">
+                  <span>案例复盘类</span>
+                  <span>22%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-orange" style="width:22%"></span></div>
+              </div>
+              <div>
+                <div class="flex justify-between mb-2 text-sm font-black text-slate-700">
+                  <span>观点表达类</span>
+                  <span>17%</span>
+                </div>
+                <div class="trend-bar"><span class="bg-brand-teal" style="width:17%"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
+            <h3 class="section-accent-title title-orange text-2xl mb-7">当前问题</h3>
+            <div class="space-y-5 text-sm font-bold text-slate-600 leading-7">
+              <div class="premium-content-block text-brand-orange">
+                <p><span class="text-slate-900">选题重复度偏高：</span>同类型内容过于集中，容易影响账号新鲜感与推荐效率。</p>
+              </div>
+              <div class="premium-content-block text-brand-blue">
+                <p><span class="text-slate-900">转化钩子不统一：</span>视频结尾、字幕、评论区引导缺乏固定模板，导致转化波动较大。</p>
+              </div>
+              <div class="premium-content-block text-brand-teal">
+                <p><span class="text-slate-900">中腰部内容承接不足：</span>头部内容强，但中等表现视频还未形成稳定的内容梯队。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="slide-wrapper">
+    <div class="ppt-card flex flex-col">
+      <header class="h-24 border-b border-slate-100 px-12 flex items-center justify-between">
+        <h2 class="section-accent-title title-orange text-3xl font-black tracking-tight">03 转化链路与运营动作</h2>
+        <span class="text-xs font-bold px-3 py-1 bg-brand-orange text-white rounded uppercase tracking-widest">Page 04 /
+          05</span>
+      </header>
+
+      <main class="flex-1 p-12 grid grid-cols-2 gap-8">
+        <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
+          <h3 class="text-2xl font-black text-slate-900 mb-8">转化链路漏斗</h3>
+          <div class="space-y-5">
+            <div class="rounded-2xl bg-red-50 border border-red-100 p-5">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-black text-slate-900">曝光观看</span>
+                <span class="text-2xl font-black text-brand-red">182.6W</span>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-orange-50 border border-orange-100 p-5 w-[88%] ml-auto">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-black text-slate-900">有效互动</span>
+                <span class="text-2xl font-black text-brand-orange">5.8W</span>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-blue-50 border border-blue-100 p-5 w-[76%] ml-auto">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-black text-slate-900">私信咨询</span>
+                <span class="text-2xl font-black text-brand-blue">3,240</span>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-teal-50 border border-teal-100 p-5 w-[62%] ml-auto">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-black text-slate-900">有效线索</span>
+                <span class="text-2xl font-black text-brand-teal">1,126</span>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-slate-100 border border-slate-200 p-5 w-[48%] ml-auto">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-black text-slate-900">成交转化</span>
+                <span class="text-2xl font-black text-slate-700">87</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-8 shadow-soft">
+          <h3 class="section-accent-title title-blue text-2xl mb-8">运营动作时间线</h3>
+          <div class="space-y-6">
+            <div class="flex items-start gap-4">
+              <span class="timeline-dot bg-brand-red"></span>
+              <div>
+                <div class="text-sm font-black text-brand-red uppercase tracking-widest mb-1">Week 1</div>
+                <p class="text-lg font-black text-slate-900 mb-1">统一封面与标题模板</p>
+                <p class="text-sm font-bold text-slate-600 leading-7">把高点击视频的共性抽成固定格式，减少封面与标题的随机性。</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="timeline-dot bg-brand-orange"></span>
+              <div>
+                <div class="text-sm font-black text-brand-orange uppercase tracking-widest mb-1">Week 2</div>
+                <p class="text-lg font-black text-slate-900 mb-1">建立评论区引导 SOP</p>
+                <p class="text-sm font-bold text-slate-600 leading-7">统一关键词回复、置顶评论、私信触发话术，缩小转化波动。</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="timeline-dot bg-brand-blue"></span>
+              <div>
+                <div class="text-sm font-black text-brand-blue uppercase tracking-widest mb-1">Week 3</div>
+                <p class="text-lg font-black text-slate-900 mb-1">补齐中腰部内容梯队</p>
+                <p class="text-sm font-bold text-slate-600 leading-7">围绕“踩坑、方法、案例、观点”四大栏目建立 12 条内容储备，提升稳定输出能力。</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="timeline-dot bg-brand-teal"></span>
+              <div>
+                <div class="text-sm font-black text-brand-teal uppercase tracking-widest mb-1">Week 4</div>
+                <p class="text-lg font-black text-slate-900 mb-1">做一轮数据复盘与选题迭代</p>
+                <p class="text-sm font-bold text-slate-600 leading-7">根据完播率、互动率、咨询率重新排序选题优先级，优先放大高转化内容。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 rounded-2xl border border-blue-100 bg-blue-50/70 p-6">
+            <label class="block text-xs font-black uppercase tracking-widest text-brand-blue mb-2">建议重点</label>
+            <p class="text-lg font-black text-slate-900 leading-8">下一阶段不建议盲目加量，优先做“内容模板标准化 + 转化动作标准化”，先把好内容稳定复制出来。</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="slide-wrapper">
+    <div class="ppt-card flex flex-col justify-center">
+      <div class="px-14 py-12">
+        <div class="max-w-5xl">
+          <div class="inline-flex px-4 py-2 bg-teal-50 text-brand-teal text-xs font-black tracking-[0.24em] rounded-sm uppercase mb-8">Action
+            Summary</div>
+          <h2 class="text-6xl font-black tracking-tighter text-slate-900 leading-tight mb-8">
+            下一阶段目标不是单条再爆，<br>
+            而是把<span class="text-brand-red">增长方法</span>沉淀成可复制的运营系统。
+          </h2>
+          <p class="text-2xl font-bold text-slate-500 leading-10 max-w-4xl">
+            当前账号已经证明“内容能涨、用户会问、线索可转”，后续重点应放在内容模板稳定、选题结构优化、转化话术统一，让账号从“偶发性结果”进入“稳定性增长”。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6 mt-14">
+          <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-soft">
+            <label class="block text-xs font-black uppercase tracking-widest text-brand-red mb-3">目标 01</label>
+            <p class="text-2xl font-black text-slate-900 leading-9">建立统一标题与封面模板，提高点击稳定性。</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-soft">
+            <label class="block text-xs font-black uppercase tracking-widest text-brand-blue mb-3">目标 02</label>
+            <p class="text-2xl font-black text-slate-900 leading-9">用栏目化内容结构，降低对头部爆款的单点依赖。</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-soft">
+            <label class="block text-xs font-black uppercase tracking-widest text-brand-teal mb-3">目标 03</label>
+            <p class="text-2xl font-black text-slate-900 leading-9">统一评论区、私信与留资承接动作，放大商业转化。</p>
+          </div>
+        </div>
+
+        <div class="mt-12 flex items-center justify-between border-t border-slate-100 pt-8">
+          <div>
+            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">汇报结束</div>
+            <div class="text-2xl font-black text-slate-900">视频号数据汇报 / 复盘版</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">建议下次补充</div>
+            <div class="text-xl font-bold text-slate-600">分栏目数据、投放数据、线索跟进结果</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</body>
+
+</html>
